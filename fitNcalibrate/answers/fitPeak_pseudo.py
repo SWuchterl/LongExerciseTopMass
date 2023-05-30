@@ -8,12 +8,12 @@ def myFitFunc(x=None,par=None):
 
 def gPeak(h=None,inDir=None,isData=None,lumi=None):
 
-    # Set the stats off 
+    # Set the stats off
     gStyle.SetOptStat(0)
     gStyle.SetOptTitle(0)
     gStyle.SetTickLength(0.03)
 
-    # Get the log(E) histogram 
+    # Get the log(E) histogram
     hFit = h.Clone()
     hFit.SetMarkerStyle(8)
     hFit.GetYaxis().SetTitleSize(0.062)
@@ -46,9 +46,9 @@ def gPeak(h=None,inDir=None,isData=None,lumi=None):
     fitfunc.SetLineStyle(1)
 
     # Do the fit
-    hFit.Fit("Gaussian fit","EMQ", "", minToFit, maxToFit) 
+    hFit.Fit("Gaussian fit","EMQ", "", minToFit, maxToFit)
     # "E" stands for Minos, "M" for improving fit results
-    # cf. ftp://root.cern.ch/root/doc/5FittingHistograms.pdf    
+    # cf. ftp://root.cern.ch/root/doc/5FittingHistograms.pdf
 
     # Get Fit Parameters
     mean = fitfunc.GetParameter(1)
@@ -109,29 +109,29 @@ def main():
     parser.add_option('-d', '--isData',  action = 'store_true',   dest='isData')
     parser.add_option('-i', '--inDir',   dest='inDir',   help='input directory',          default='nominal',    type='string')
     parser.add_option('-j', '--json',    dest='json',    help='json with list of files',  default="../analyzeNplot/data/samples_Run2015_25ns.json", type='string')
-    parser.add_option('-l', '--lumi',    dest='lumi' ,   help='lumi to print out',        default=2444.,        type=float)
+    parser.add_option('-l', '--lumi',    dest='lumi' ,   help='lumi to print out',        default=35867.,        type=float)
     (opt, args) = parser.parse_args()
-    
+
     # Read list of MC samples
     if opt.isData is not True:
         samplesList=[]
         jsonFile = open(opt.json,'r')
         jsonList=json.load(jsonFile,encoding='utf-8').items()
         jsonFile.close()
-        for tag,sample in jsonList: 
+        for tag,sample in jsonList:
             if not sample[3] in samplesList and not "Data" in sample[3]:
                 samplesList.append(sample[3])
 
     # Open the root file
-    fiName = "../analyzeNplot/"+opt.inDir+"/plots/plotter.root"
+    fiName = opt.inDir+"/plots/plotter.root"
     print "... processing", fiName
     if not os.path.isfile(fiName):
         print "Help, file doesn't exist"
         exit(-1)
     res = ROOT.TFile(fiName, "read")
 
-    #Get the histogram 
-    hName = "bjetenls/"   
+    #Get the histogram
+    hName = "bjetenls/"
     if opt.isData is True:
         hName = hName + "bjetenls"
     else:
@@ -140,7 +140,7 @@ def main():
     histo.SetDirectory(0)
     if opt.isData is not True:
         for sampleInfo in samplesList:
-            if sampleInfo is not samplesList[0]: 
+            if sampleInfo is not samplesList[0]:
                 histo.Add(res.Get(str("bjetenls/bjetenls_"+sampleInfo)).Clone());
 
     #Generate pseudo-exp
@@ -193,5 +193,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
