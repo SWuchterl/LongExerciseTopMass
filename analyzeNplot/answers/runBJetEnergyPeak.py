@@ -15,7 +15,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
     print '...analysing %s' % inFileURL
 
     #book some histograms
-    histos={ 
+    histos={
         'nvtx'  :ROOT.TH1F('nvtx',';Vertex multiplicity; Events',30,0,30),
         'nbtags':ROOT.TH1F('nbtags',';b-tag multiplicity; Events',5,0,5),
         'nleptons':ROOT.TH1F('nleptons',';Lepton multiplicity; Events',5,0,5),
@@ -65,18 +65,18 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
                 taggedJetsP4.append(jp4)
                 if abs(tree.Jet_flavour[ij]) == 5:
                     matchedJetsP4.append(jp4)
-        
+
         if nJets<2 : continue
         if nBtags!=1 and nBtags!=2 : continue
 
         for ij in xrange(0,tree.nLepton):
 
-            #get the kinematics and select the lepton                                                                
+            #get the kinematics and select the lepton
             lp4=ROOT.TLorentzVector()
             lp4.SetPtEtaPhiM(tree.Lepton_pt[ij],tree.Lepton_eta[ij],tree.Lepton_phi[ij],0)
             if lp4.Pt()<20 or ROOT.TMath.Abs(lp4.Eta())>2.4 : continue
 
-            #count selected jet                                                                                   
+            #count selected jet
             nLeptons +=1
 
             leptonsP4.append(lp4)
@@ -104,7 +104,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
 
         for ij in xrange(0,len(matchedJetsP4)):
             histos['bmjeteta'].Fill(matchedJetsP4[ij].Eta(),evWgt)
-        
+
         for ij in xrange(0,len(leptonsP4)):
             if ij>1 : break
             lid=abs(tree.Lepton_id[ij])
@@ -132,7 +132,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
 Wrapper to be used when run in parallel
 """
 def runBJetEnergyPeakPacked(args):
-    
+
     try:
         return runBJetEnergyPeak(inFileURL=args[0],
                                  outFileURL=args[1],
@@ -166,13 +166,15 @@ def main():
     #prepare output
     if len(opt.outDir)==0    : opt.outDir='./'
     os.system('mkdir -p %s' % opt.outDir)
-        
+
     #create the analysis jobs
     taskList = []
-    for sample, sampleInfo in samplesList: 
-        inFileURL  = 'root://cmseos.fnal.gov//%s/%s.root' % (opt.inDir,sample)
-        #if not os.path.isfile(inFileURL): continue
-        xsec=sampleInfo[0] if sampleInfo[1]==0 else None        
+    for sample, sampleInfo in samplesList:
+        inFileURL  = '%s/%s.root' % (opt.inDir,sample)
+        if not os.path.isfile(inFileURL):
+            print inFileURL,"does not exist! SKIPPING IT!"
+            continue
+        xsec=sampleInfo[0] if sampleInfo[1]==0 else None
         outFileURL = '%s/%s.root' % (opt.outDir,sample)
         taskList.append( (inFileURL,outFileURL,xsec) )
 

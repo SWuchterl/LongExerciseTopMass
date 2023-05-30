@@ -14,9 +14,9 @@ Perform the analysis on a single file
 def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
 
     print '...analysing %s' % inFileURL
-    
+
     #book some histograms for systematic samples
-    histos={ 
+    histos={
         # nominal (for xcheck)
         'bjetenls_nominal':ROOT.TH1F('bjetenls_nominal',';log(E);  1/E dN_{b jets}/dlog(E)',20,3.,7.),
 
@@ -111,7 +111,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
         tree.GetEntry(i)
         if i%100==0 : sys.stdout.write('\r [ %d/100 ] done' %(int(float(100.*i)/float(totalEntries))) )
 
-        #generator level weight only for MC                                   
+        #generator level weight only for MC
         evWgt=[]
         if xsec              :
             evWgt  = [xsec*tree.LepSelEffWeights[0]*tree.PUWeights[0],
@@ -122,7 +122,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
                       xsec*tree.LepSelEffWeights[0]*tree.PUWeights[0]*tree.TopPtWgt]
         else:
             evWgt = [1.0,1.0,1.0,1.0,1.0,1.0]
-            
+
         xsecWgt_up = 1
         xsecWgt_down = 1
 
@@ -134,7 +134,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
         if 'WJets' in inFileURL:
             xsecWgt_up = 2
             xsecWgt_down = 0
-        # 50% uncertainty on other processes 
+        # 50% uncertainty on other processes
         if 'DY' in inFileURL or 'WZ' in inFileURL or 'ZZ' in inFileURL or 'WZ' in inFileURL:
             xsecWgt_up = 1.5
             xsecWgt_down = 0.5
@@ -148,12 +148,12 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
 
         for ij in xrange(0,tree.nLepton):
 
-            #get the kinematics and select the lepton                                                                
+            #get the kinematics and select the lepton
             lp4=ROOT.TLorentzVector()
             lp4.SetPtEtaPhiM(tree.Lepton_pt[ij],tree.Lepton_eta[ij],tree.Lepton_phi[ij],0)
             if lp4.Pt()<20 or ROOT.TMath.Abs(lp4.Eta())>2.4 : continue
 
-            #count selected jet                                                                                   
+            #count selected jet
             nLeptons +=1
 
             leptonsP4.append(lp4)
@@ -170,7 +170,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
             taggedJetsP4_up=[]
             taggedJetsP4_down=[]
             matchedJetsP4=[]
-        
+
             for ij in xrange(0,tree.nJet):
 
                 #get the kinematics and select the jet
@@ -194,11 +194,11 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
                     taggedJetsP4_down.append(jp4*w_jec_down)
                     if abs(tree.Jet_flavour[ij]) == 5:
                         matchedJetsP4.append(jp4)
-        
+
                 # nJet and nBJet cut
                 if nJets<2 : continue
                 if nBtags!=1 and nBtags!=2 : continue
-       
+
                 for ij in xrange(0,len(taggedJetsP4)):
                     if ij>1 : break
                     if iJEC > 0 :
@@ -210,16 +210,16 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
                         histos['bjetenls_jer_up'].Fill(ROOT.TMath.Log(taggedJetsP4_up[ij].E()),evWgt[0]/taggedJetsP4_up[ij].E())
                         histos['bjetenls_jer_down'].Fill(ROOT.TMath.Log(taggedJetsP4_down[ij].E()),evWgt[0]/taggedJetsP4_down[ij].E())
 
-                
+
         #save P4 for b-tagged jet
         #use up to two leading b-tagged jets
         for ij in xrange(0,len(taggedJetsP4)):
             if ij>1 : break
             #fill other histograms (nominal and weight based)
             histos['bjetenls_nominal'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),evWgt[0]/taggedJetsP4[ij].E())
-            histos['bjetenls_lep_up'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),evWgt[1]/taggedJetsP4[ij].E())     
+            histos['bjetenls_lep_up'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),evWgt[1]/taggedJetsP4[ij].E())
             histos['bjetenls_lep_down'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),evWgt[2]/taggedJetsP4[ij].E())
-            histos['bjetenls_PU_up'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),evWgt[3]/taggedJetsP4[ij].E()) 
+            histos['bjetenls_PU_up'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),evWgt[3]/taggedJetsP4[ij].E())
             histos['bjetenls_PU_down'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),evWgt[4]/taggedJetsP4[ij].E())
             histos['bjetenls_toppT'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),evWgt[5]/taggedJetsP4[ij].E())
             histos['bjetenls_norm_up'].Fill(ROOT.TMath.Log(taggedJetsP4[ij].E()),(evWgt[0]*xsecWgt_up)/taggedJetsP4[ij].E())
@@ -238,7 +238,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
 Wrapper to be used when run in parallel
 """
 def runBJetEnergyPeakPacked(args):
-    
+
     try:
         return runBJetEnergyPeak(inFileURL=args[0],
                                  outFileURL=args[1],
@@ -272,13 +272,15 @@ def main():
     #prepare output
     if len(opt.outDir)==0    : opt.outDir='./'
     os.system('mkdir -p %s' % opt.outDir)
-        
+
     #create the analysis jobs
     taskList = []
-    for sample, sampleInfo in samplesList: 
-        inFileURL  = 'root://cmseos.fnal.gov//%s/%s.root' % (opt.inDir,sample)
-        #if not os.path.isfile(inFileURL): continue
-        xsec=sampleInfo[0] if sampleInfo[1]==0 else None        
+    for sample, sampleInfo in samplesList:
+        inFileURL  = '%s/%s.root' % (opt.inDir,sample)
+        if not os.path.isfile(inFileURL):
+            print inFileURL,"does not exist! SKIPPING IT!"
+            continue
+        xsec=sampleInfo[0] if sampleInfo[1]==0 else None
         outFileURL = '%s/%s.root' % (opt.outDir,sample)
         taskList.append( (inFileURL,outFileURL,xsec) )
 

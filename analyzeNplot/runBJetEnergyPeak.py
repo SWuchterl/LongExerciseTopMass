@@ -15,15 +15,15 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
     print '...analysing %s' % inFileURL
 
     #book some histograms
-    histos={ 
+    histos={
         'bjeten':ROOT.TH1F('bjeten',';Energy [GeV]; Jets',30,0,300),
         'bjetenls':ROOT.TH1F('bjetenls',';log(E);  1/E dN_{b jets}/dlog(E)',20,3.,7.),
         'nvtx'  :ROOT.TH1F('nvtx',';Vertex multiplicity; Events',30,0,30),
         'nbtags':ROOT.TH1F('nbtags',';b-tag multiplicity; Events',5,0,5),
-        
+
         #Add new histogram for number of jets
         #'njets':ROOT.TH1F('???','???',???,???,???),
-        
+
         #Add new histogram for electron pt
 
         #Add new histogram for muon pt
@@ -64,12 +64,12 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
         if nBtags!=1 and nBtags!=2 : continue
 
         for ij in xrange(0,tree.nLepton):
-            #get the kinematics and select the lepton                       
+            #get the kinematics and select the lepton
             lp4=ROOT.TLorentzVector()
             lp4.SetPtEtaPhiM(tree.Lepton_pt[ij],tree.Lepton_eta[ij],tree.Lepton_phi[ij],0)
             if lp4.Pt()<20 or ROOT.TMath.Abs(lp4.Eta())>2.4 : continue
 
-            #count selected leptons                    
+            #count selected leptons
             nLeptons +=1
 
         if nLeptons<2 : continue
@@ -82,7 +82,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
         #ready to fill the histograms
         #fill nvtx plot
         #histos['nvtx'].Fill(???,???)
-        
+
         #fill nbtag plot
         #histos['nbtags'].Fill(???,???)
 
@@ -107,7 +107,7 @@ def runBJetEnergyPeak(inFileURL, outFileURL, xsec=None):
 Wrapper to be used when run in parallel
 """
 def runBJetEnergyPeakPacked(args):
-    
+
     try:
         return runBJetEnergyPeak(inFileURL=args[0],
                                  outFileURL=args[1],
@@ -124,7 +124,7 @@ steer the script
 """
 def main():
 
-    #configuration
+    #configuration and command line options
     usage = 'usage: %prog [options]'
     parser = optparse.OptionParser(usage)
     parser.add_option('-j', '--json',        dest='json'  ,      help='json with list of files',      default=None,        type='string')
@@ -141,13 +141,16 @@ def main():
     #prepare output
     if len(opt.outDir)==0    : opt.outDir='./'
     os.system('mkdir -p %s' % opt.outDir)
-        
+
     #create the analysis jobs
     taskList = []
-    for sample, sampleInfo in samplesList: 
-        inFileURL  = 'root://cmseos.fnal.gov//%s/%s.root' % (opt.inDir,sample)
-        #if not os.path.isfile(inFileURL): continue
-        xsec=sampleInfo[0] if sampleInfo[1]==0 else None        
+    for sample, sampleInfo in samplesList:
+        # inFileURL  = 'root://cmseos.fnal.gov//%s/%s.root' % (opt.inDir,sample)
+        inFileURL  = '%s/%s.root' % (opt.inDir,sample)
+        if not os.path.isfile(inFileURL):
+            print inFileURL,"does not exist! SKIPPING IT!"
+            continue
+        xsec=sampleInfo[0] if sampleInfo[1]==0 else None
         outFileURL = '%s/%s.root' % (opt.outDir,sample)
         taskList.append( (inFileURL,outFileURL,xsec) )
 
