@@ -17,7 +17,7 @@ class Plot(object):
         self.dataH = None
         self.data = None
         self._garbageList = []
-        self.plotformats = ['pdf','png','C']
+        self.plotformats = ['pdf','png','C','pdf']
         self.savelog = False
         self.ratiorange = (0.46,1.54)
 
@@ -30,7 +30,8 @@ class Plot(object):
                 self.dataH=h
                 self.dataH.SetDirectory(0)
                 self.dataH.SetMarkerStyle(20)
-                self.dataH.SetMarkerSize(1.4)
+                # self.dataH.SetMarkerSize(1.4)
+                self.dataH.SetMarkerSize(0.5)
                 self.dataH.SetMarkerColor(color)
                 self.dataH.SetLineColor(ROOT.kBlack)
                 self.dataH.SetLineWidth(2)
@@ -85,7 +86,7 @@ class Plot(object):
             print 'Skipping TH2'
             return
 
-        c = ROOT.TCanvas('c','c',500,500)
+        c = ROOT.TCanvas('c'+self.mc.values()[0].GetTitle(),'c'+self.mc.values()[0].GetTitle(),500,500)
         c.SetBottomMargin(0.0)
         c.SetLeftMargin(0.0)
         c.SetTopMargin(0)
@@ -93,7 +94,8 @@ class Plot(object):
 
         #holds the main plot
         c.cd()
-        p1 = ROOT.TPad('p1','p1',0.0,0.85,1.0,0.0)
+        # p1 = ROOT.TPad('p1','p1',0.0,0.85,1.0,0.0)
+        p1 = ROOT.TPad('p1','p1',0.0,0.15,1.0,1.0)
         p1.Draw()
         p1.SetRightMargin(0.05)
         p1.SetLeftMargin(0.12)
@@ -104,7 +106,7 @@ class Plot(object):
         p1.cd()
 
         # legend
-        leg = ROOT.TLegend(0.45, 0.875-0.02*max(len(self.mc)-2,0), 0.98, 0.925)        
+        leg = ROOT.TLegend(0.45, 0.875-0.02*max(len(self.mc)-2,0), 0.98, 0.925)
         leg.SetBorderSize(0)
         leg.SetFillStyle(0)
         leg.SetTextFont(43)
@@ -113,7 +115,7 @@ class Plot(object):
 
         if self.dataH is not None:
             if self.data is None: self.finalize()
-            leg.AddEntry( self.data, self.data.GetTitle(),'p')
+            leg.AddEntry( self.data, self.data.GetTitle(),'ep')
             nlegCols += 1
         for h in self.mc:
             if not noScale : self.mc[h].Scale(lumi)
@@ -140,7 +142,7 @@ class Plot(object):
         frame = totalMC.Clone('frame') if totalMC is not None else self.dataH.Clone('frame')
         frame.Reset('ICE')
         if totalMC:
-            maxY = totalMC.GetMaximum() 
+            maxY = totalMC.GetMaximum()
         if self.dataH:
             if maxY<self.dataH.GetMaximum():
                 maxY=self.dataH.GetMaximum()
@@ -155,7 +157,7 @@ class Plot(object):
         frame.GetYaxis().SetTitleOffset(1.3)
 
         if totalMC is not None   : stack.Draw('hist same')
-        if self.data is not None : self.data.Draw('p')
+        if self.data is not None : self.data.Draw('ep0')
 
         leg.Draw()
         txt=ROOT.TLatex()
@@ -170,7 +172,7 @@ class Plot(object):
 
         #holds the ratio
         c.cd()
-        p2 = ROOT.TPad('p2','p2',0.0,0.85,1.0,1.0)
+        p2 = ROOT.TPad('p2','p2',0.0,0.02,1.0,0.18)
         p2.Draw()
         p2.SetBottomMargin(0.01)
         p2.SetRightMargin(0.05)
@@ -185,7 +187,7 @@ class Plot(object):
         ratioframe.GetYaxis().SetRangeUser(self.ratiorange[0], self.ratiorange[1])
         self._garbageList.append(frame)
         ratioframe.GetYaxis().SetNdivisions(5)
-        ratioframe.GetYaxis().SetLabelSize(0.18)        
+        ratioframe.GetYaxis().SetLabelSize(0.18)
         ratioframe.GetYaxis().SetTitleSize(0.2)
         ratioframe.GetYaxis().SetTitleOffset(0.2)
         ratioframe.GetXaxis().SetLabelSize(0)
@@ -204,7 +206,8 @@ class Plot(object):
             gr.SetMarkerColor(self.data.GetMarkerColor())
             gr.SetLineColor(self.data.GetLineColor())
             gr.SetLineWidth(self.data.GetLineWidth())
-            gr.Draw('p')
+            # gr.Draw('p')
+            gr.Draw('ep0')
         except:
             pass
 
@@ -309,7 +312,7 @@ def convertToPoissonErrorGr(h):
         else:
             grpois.SetPointEYlow(i, math.sqrt(N))
             grpois.SetPointEYhigh(i,math.sqrt(N))
-            
+
     return grpois
 
 
@@ -327,7 +330,8 @@ def main():
     parser.add_option(      '--silent',      dest='silent' ,     help='only dump to ROOT file',         default=False,   action='store_true')
     parser.add_option(      '--saveTeX',     dest='saveTeX' ,    help='save as tex file as well',       default=False,   action='store_true')
     parser.add_option(      '--rebin',       dest='rebin',       help='rebin factor',                   default=1,       type=int)
-    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi to print out',              default=41.6,    type=float)
+    # parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi to print out',              default=41.6,    type=float)
+    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi to print out',              default=35867.,  type=float)
     parser.add_option(      '--only',        dest='only',        help='plot only these (csv)',          default='',      type='string')
     (opt, args) = parser.parse_args()
 
@@ -338,16 +342,16 @@ def main():
 
     onlyList=opt.only.split(',')
 
-    #read plots 
+    #read plots
     plots={}
-    for tag,sample in samplesList: 
+    for tag,sample in samplesList:
         fIn=ROOT.TFile.Open('%s/%s.root' % ( opt.inDir, tag) )
         print 'opening %s/%s.root' % ( opt.inDir, tag)
         try:
             for tkey in fIn.GetListOfKeys():
                 key=tkey.GetName()
                 keep=False
-                for tag in onlyList: 
+                for tag in onlyList:
                     if tag in key: keep=True
                 if not keep: continue
                 obj=fIn.Get(key)
@@ -365,7 +369,7 @@ def main():
     outDir=opt.inDir+'/plots'
     os.system('rm -rf %s' % outDir)
     os.system('mkdir -p %s' % outDir)
-    for p in plots : 
+    for p in plots :
         if opt.saveLog    : plots[p].savelog=True
         if not opt.silent : plots[p].show(outDir=outDir,lumi=opt.lumi,saveTeX=opt.saveTeX)
         plots[p].appendTo(outDir+'/plotter.root')
@@ -375,10 +379,9 @@ def main():
     print 'Plots and summary ROOT file can be found in %s' % outDir
     print '-'*50
 
-        
+
 """
 for execution from another script
 """
 if __name__ == "__main__":
     sys.exit(main())
-
