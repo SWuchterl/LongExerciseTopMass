@@ -88,5 +88,4 @@ stats.SetX2NDC(0.9)
 # Save the plot
 #gPad.RedrawAxis()
 c1.SaveAs("calibration.png")
-
-
+c1.SaveAs("calibration.pdf")
